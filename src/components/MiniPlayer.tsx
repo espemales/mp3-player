@@ -2,6 +2,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useRef, useEffect, useState } from 'react';
 import { UsePlaylist } from '../hooks/usePlaylist';
 import { VolumeSlider } from './VolumeSlider';
+import { EqualizerPopover } from './EqualizerPopover';
 
 interface MiniPlayerProps {
   playlist: UsePlaylist;
@@ -13,6 +14,7 @@ export function MiniPlayer({ playlist }: MiniPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [progress] = useState(0);
+  const [showEQPopover, setShowEQPopover] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -37,6 +39,10 @@ export function MiniPlayer({ playlist }: MiniPlayerProps) {
     getCurrentWindow().hide();
   };
 
+  const toggleEQPopover = () => {
+    setShowEQPopover(!showEQPopover);
+  };
+
   return (
     <div className="mini-player" ref={containerRef}>
       <div className="drag-handle" onMouseDown={handleDragStart}>
@@ -49,6 +55,13 @@ export function MiniPlayer({ playlist }: MiniPlayerProps) {
       </div>
       <button onClick={prev} title="Previous">⏮</button>
       <VolumeSlider />
+      <button onClick={toggleEQPopover} className="eq-btn" title="EQ">EQ</button>
+      {showEQPopover && (
+        <EqualizerPopover
+          currentTrackPath={currentTrack?.path ?? null}
+          onClose={() => setShowEQPopover(false)}
+        />
+      )}
       <button onClick={isPlaying ? pause : play} title={isPlaying ? 'Pause' : 'Play'}>
         {isPlaying ? '⏸' : '▶'}
       </button>

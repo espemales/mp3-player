@@ -118,3 +118,53 @@
   background: #fff;
   cursor: pointer;
 }
+
+.eq-popover {
+  position: absolute;
+  bottom: 72px;
+  right: 40px;
+  background: rgba(25, 25, 25, 0.97);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 8px 0;
+  min-width: 180px;
+  z-index: 200;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.eq-popover-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 12px 8px;
+}
+.eq-preset-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.8);
+  transition: background 0.1s;
+}
+.eq-preset-item:hover { background: rgba(255,255,255,0.08); }
+.eq-preset-item.active { color: #fff; font-weight: 500; }
+.eq-popover-divider {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin: 6px 0;
+}
+.eq-popover-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  padding: 2px 12px 4px;
+}
+.mini-player .eq-btn {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.7;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
