@@ -1,6 +1,8 @@
 mod commands;
 mod config;
+mod file_watcher;
 mod track_eq;
+use commands::Watchers;
 use config::{read_config, write_config, Config};
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
@@ -26,6 +28,10 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
+            // Initialize watchers state
+            let watchers = Watchers::default();
+            app.manage(watchers);
+
             let play_pause_item = MenuItem::with_id(app, "play-pause", "Play/Pause", true, None::<&str>)?;
             let next_item = MenuItem::with_id(app, "next", "Next Track", true, None::<&str>)?;
             let prev_item = MenuItem::with_id(app, "prev", "Previous Track", true, None::<&str>)?;
@@ -113,7 +119,10 @@ pub fn run() {
             commands::get_track_eq,
             commands::save_track_eq,
             commands::get_custom_presets,
-            commands::save_custom_preset
+            commands::save_custom_preset,
+            commands::scan_folder,
+            commands::start_watching,
+            commands::stop_watching
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

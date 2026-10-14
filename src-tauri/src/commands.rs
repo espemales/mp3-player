@@ -1,8 +1,40 @@
+use crate::file_watcher::{self, WatcherMap};
 use crate::track_eq;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+
+// Global watcher state
+pub struct Watchers(pub WatcherMap);
+
+impl Default for Watchers {
+    fn default() -> Self {
+        Watchers(Arc::new(Mutex::new(HashMap::new())))
+    }
+}
+
+// -- Folder Scanning --
+
+#[tauri::command]
+pub fn scan_folder(folder: String) -> file_watcher::ScanResult {
+    file_watcher::scan_folder(&folder)
+}
+
+#[tauri::command]
+pub fn start_watching(
+    path: String,
+    app: tauri::AppHandle,
+    watchers: tauri::State<'_, Watchers>,
+) -> Result<(), String> {
+    file_watcher::start_watching_impl(path, &watchers.0, app)
+}
+
+#[tauri::command]
+pub fn stop_watching(path: String, watchers: tauri::State<'_, Watchers>) -> Result<(), String> {
+    file_watcher::stop_watching_impl(&path, &watchers.0)
+}
 
 // -- Track EQ --
 

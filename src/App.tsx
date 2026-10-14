@@ -15,6 +15,15 @@ function App() {
     }
   }, [config.volume]);
 
+  // Load music folders from config on startup
+  useEffect(() => {
+    if (config.musicFolders && config.musicFolders.length > 0) {
+      config.musicFolders.forEach(folder => {
+        playlist.loadFolder(folder);
+      });
+    }
+  }, [config.musicFolders]);
+
   return (
     <div>
       <MiniPlayer

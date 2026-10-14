@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { Track } from '../types';
 import { audioEngine } from '../audio/AudioEngine';
 
@@ -11,10 +13,11 @@ export interface UsePlaylist {
   pause: () => void;
   next: () => void;
   prev: () => void;
+  loadFolder: (folderPath: string) => Promise<void>;
 }
 
 export function usePlaylist(): UsePlaylist {
-  const [tracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<Track[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -40,6 +43,52 @@ export function usePlaylist(): UsePlaylist {
     setCurrentIndex((prev) => (prev - 1 + tracks.length) % tracks.length);
   }, [tracks.length]);
 
+  const loadFolder = useCallback(async (folderPath: string) => {
+    try {
+      const result = await invoke<{ files: string[] }>('scan_folder', { folder: folderPath });
+      const newTracks: Track[] = result.files.map(path => ({
+        path,
+        name: path.split(/[/\\]/).pop() || path,
+      }));
+      setTracks(prev => {
+        const existingPaths = new Set(prev.map(t => t.path));
+        const unique = newTracks.filter(t => !existingPaths.has(t.path));
+        return [...prev, ...unique];
+      });
+    } catch (e) {
+      console.error('Failed to load folder:', e);
+    }
+  }, []);
+
+  // Listen for folder file events
+  useEffect(() => {
+    const setupListeners = async () => {
+      const unlistenAdd = await listen<string>('folder-file-added', (event) => {
+        const path = event.payload;
+        if (path.match(/\.(mp3|flac|wav|m4a|ogg)$/i)) {
+          setTracks(prev => {
+            if (prev.some(t => t.path === path)) return prev;
+            return [...prev, { path, name: path.split(/[/\\]/).pop() || path }];
+          });
+        }
+      });
+
+      const unlistenRemove = await listen<string>('folder-file-removed', (event) => {
+        setTracks(prev => prev.filter(t => t.path !== event.payload));
+      });
+
+      return () => {
+        unlistenAdd();
+        unlistenRemove();
+      };
+    };
+
+    const cleanup = setupListeners();
+    return () => {
+      cleanup.then(fn => fn());
+    };
+  }, []);
+
   useEffect(() => {
     if (currentTrack) {
       audioEngine.loadTrack(currentTrack);
@@ -62,5 +111,6 @@ export function usePlaylist(): UsePlaylist {
     pause,
     next,
     prev,
+    loadFolder,
   };
 }
