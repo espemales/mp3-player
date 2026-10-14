@@ -1,3 +1,4 @@
+import { convertFileSrc } from '@tauri-apps/api/core';
 import { Track } from '../types';
 import { Equalizer } from './Equalizer';
 
@@ -8,7 +9,13 @@ class AudioEngine {
   private _lastVolume = 1;
   public readonly eq = new Equalizer(this.audio);
 
+  private resumeContext(): void {
+    const ctx = this.eq.getContext();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
   play(): void {
+    this.resumeContext();
     this.audio.play();
   }
 
@@ -17,8 +24,9 @@ class AudioEngine {
   }
 
   loadTrack(track: Track): void {
-    this.audio.src = track.path;
+    this.audio.src = convertFileSrc(track.path);
     this.eq.connect();
+    this.resumeContext();
     this.audio.play();
   }
 

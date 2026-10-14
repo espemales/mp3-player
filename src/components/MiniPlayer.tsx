@@ -1,4 +1,5 @@
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
+import { getCurrentWebview } from '@tauri-apps/api/webview';
 import { useRef, useEffect, useState } from 'react';
 import { UsePlaylist } from '../hooks/usePlaylist';
 import { audioEngine } from '../audio/AudioEngine';
@@ -11,7 +12,7 @@ interface MiniPlayerProps {
 }
 
 export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
-  const { currentTrack, isPlaying, play, pause, next, prev } = playlist;
+  const { currentTrack, isPlaying, next, prev } = playlist;
   const titleRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -19,100 +20,99 @@ export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
   const [showEQPopover, setShowEQPopover] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Grow/shrink window to accommodate open popups
+  useEffect(() => {
+    getCurrentWindow().setSize(new LogicalSize(400, showEQPopover ? 264 : 64));
+  }, [showEQPopover]);
+
   useEffect(() => {
     if (!containerRef.current) return;
-
     const observer = new ResizeObserver(() => {
       if (titleRef.current && containerRef.current) {
-        const titleWidth = titleRef.current.scrollWidth;
-        const containerWidth = containerRef.current.offsetWidth;
-        setIsOverflowing(titleWidth > containerWidth);
+        setIsOverflowing(titleRef.current.scrollWidth > containerRef.current.offsetWidth);
       }
     });
-
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const cur = audioEngine.currentTime;
       const dur = audioEngine.duration;
       if (dur > 0) {
-        setProgress((cur / dur) * 100);
+        setProgress((audioEngine.currentTime / dur) * 100);
       }
     }, 250);
     return () => clearInterval(interval);
   }, []);
 
+  // Tauri native drag-drop events
+  useEffect(() => {
+    let ignore = false;
+    let unlisten: (() => void) | undefined;
+    (async () => {
+      const webview = getCurrentWebview();
+      unlisten = await webview.onDragDropEvent((event) => {
+        if (ignore) return;
+        if (event.payload.type === 'over') { setIsDragging(true); }
+        else if (event.payload.type === 'drop') {
+          setIsDragging(false);
+          for (const path of event.payload.paths) {
+            if (/\.(mp3|flac|wav|m4a|ogg)$/i.test(path)) playlist.addFile(path);
+            else playlist.loadFolder(path);
+          }
+        } else if (event.payload.type === 'leave') { setIsDragging(false); }
+      });
+    })();
+    return () => { ignore = true; unlisten?.(); };
+  }, [playlist]);
+
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const bar = e.currentTarget;
-    const rect = bar.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const pct = (e.clientX - rect.left) / rect.width;
     const dur = audioEngine.duration;
-    if (dur > 0) {
-      audioEngine.currentTime = pct * dur;
-    }
+    if (dur > 0) audioEngine.currentTime = pct * dur;
   };
 
-  const handleDragStart = () => {
-    getCurrentWindow().startDragging();
-  };
-
-  const handleClose = () => {
-    getCurrentWindow().hide();
-  };
-
-  const toggleEQPopover = () => {
-    setShowEQPopover(!showEQPopover);
-  };
-
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const items = Array.from(e.dataTransfer.files);
-    for (const item of items) {
-      const path = (item as any).path as string;
-      if (!path) continue;
-      // Check if it's a directory by trying to scan it
-      if (path.match(/\.(mp3|flac|wav|m4a|ogg)$/i)) {
-        // Single audio file
-        playlist.addFile(path);
-      } else {
-        // Assume folder - scan it
-        playlist.loadFolder(path);
-      }
-    }
-  };
+  const handleClose = () => { getCurrentWindow().hide(); };
+  const toggleEQ = () => setShowEQPopover(!showEQPopover);
+  const handlePlayPause = () => { if (isPlaying) { audioEngine.pause(); } else { audioEngine.play(); } };
 
   return (
-    <div className={`mini-player${isDragging ? ' dragging' : ''}`}
-      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-      onDragLeave={() => setIsDragging(false)}
-      onDrop={handleDrop}
+    <div
+      className={`mini-player${isDragging ? ' dragging' : ''}`}
+      data-tauri-drag-region
+      ref={containerRef}
     >
-      <div className="drag-handle" onMouseDown={handleDragStart}>
-        ⋮⋮
+      {/* drag handle */}
+      <div
+        className="drag-handle"
+        onMouseDown={() => getCurrentWindow().startDragging()}
+      >
+        &#8942;&#8942;
       </div>
-      <div className={`track-title ${isOverflowing ? 'overflow' : ''}`}>
-        <span ref={titleRef}>
+
+      <div className={`track-title${isOverflowing ? ' overflow' : ''}`}>
+        <span ref={titleRef} onMouseDown={() => getCurrentWindow().startDragging()}>
           {currentTrack?.name || 'No track'}
         </span>
       </div>
-      <button onClick={prev} title="Previous">⏮</button>
+
+      <button onClick={prev} title="Previous">&#9198;</button>
       <VolumeSlider onVolumeChange={onVolumeChange} />
-      <button onClick={toggleEQPopover} className="eq-btn" title="EQ">EQ</button>
+      <button onClick={toggleEQ} className="eq-btn" title="EQ">EQ</button>
       {showEQPopover && (
         <EqualizerPopover
           currentTrackPath={currentTrack?.path ?? null}
           onClose={() => setShowEQPopover(false)}
         />
       )}
-      <button onClick={isPlaying ? pause : play} title={isPlaying ? 'Pause' : 'Play'}>
+      <button onClick={handlePlayPause} title={isPlaying ? 'Pause' : 'Play'}>
         {isPlaying ? '⏸' : '▶'}
       </button>
       <button onClick={next} title="Next">⏭</button>
       <button onClick={handleClose} title="Hide to tray">✕</button>
+
       <div className="progress-bar" onClick={handleProgressClick}>
         <div className="progress-fill" style={{ width: `${progress}%` }} />
       </div>

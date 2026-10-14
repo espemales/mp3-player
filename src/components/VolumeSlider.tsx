@@ -13,9 +13,7 @@ export function VolumeSlider({ onVolumeChange }: Props) {
     const v = parseFloat(e.target.value);
     setVol(v);
     audioEngine.setVolume(v);
-    if (onVolumeChange) {
-      onVolumeChange(v);
-    }
+    if (onVolumeChange) onVolumeChange(v);
   };
 
   return (
@@ -27,12 +25,8 @@ export function VolumeSlider({ onVolumeChange }: Props) {
       </button>
       {show && (
         <div className="volume-popup">
-          <input
-            type="range" min="0" max="1" step="0.01"
-            value={vol}
-            onChange={handleChange}
-            className="volume-slider"
-          />
+          <input type="range" min="0" max="1" step="0.01"
+            value={vol} onChange={handleChange} className="volume-slider" />
         </div>
       )}
     </div>

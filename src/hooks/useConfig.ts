@@ -26,11 +26,21 @@ export function useConfig() {
       .catch(() => setConfig(defaultConfig));
   }, []);
 
+  // Only sends changed fields to avoid overwriting windowPosition
   const saveConfig = useCallback(async (newConfig: Partial<Config>) => {
-    const updated = { ...config, ...newConfig };
+    // Merge locally for React state
+    const merged = { ...config, ...newConfig };
+    setConfig(merged);
+    // Send only the fields that changed (not windowPosition)
+    const partial: Partial<Config> = {};
+    for (const key of Object.keys(newConfig) as Array<keyof Config>) {
+      if (key !== 'windowPosition') {
+        (partial as Record<string, unknown>)[key] = newConfig[key];
+      }
+    }
     try {
-      await invoke('save_config', { config: updated });
-      setConfig(updated);
+      // Rust-side merge: reads disk config, applies partial, writes back
+      await invoke('save_config_partial', { partial });
     } catch (e) {
       console.error('Failed to save config:', e);
     }

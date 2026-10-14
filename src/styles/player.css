@@ -10,6 +10,7 @@
   width: 400px;
   height: 64px;
   display: flex;
+  position: relative;
   align-items: center;
   gap: 8px;
   padding: 0 12px;
@@ -22,6 +23,11 @@
   user-select: none;
 }
 
+.mini-player .drag-region {
+  flex: 1;
+  height: 100%;
+  cursor: grab;
+}
 .mini-player .drag-handle {
   cursor: grab;
   font-size: 18px;

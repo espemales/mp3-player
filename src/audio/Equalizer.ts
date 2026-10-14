@@ -59,4 +59,8 @@ export class Equalizer {
   reset(): void {
     this.applyPreset([0, 0, 0, 0, 0, 0, 0, 0]);
   }
+
+  getContext(): AudioContext {
+    return this.ctx;
+  }
 }

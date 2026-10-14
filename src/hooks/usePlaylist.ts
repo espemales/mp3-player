@@ -72,6 +72,17 @@ export function usePlaylist(): UsePlaylist {
     }
   }, []);
 
+  // Listen for tray control events
+  useEffect(() => {
+    let cleanup: (() => void)[] = [];
+    listen('tray-play-pause', () => {
+      setIsPlaying(p => { if (p) { audioEngine.pause(); } else { audioEngine.play(); } return !p; });
+    }).then(u => cleanup.push(u));
+    listen('tray-next', () => next()).then(u => cleanup.push(u));
+    listen('tray-prev', () => prev()).then(u => cleanup.push(u));
+    return () => cleanup.forEach(fn => fn());
+  }, [next, prev]);
+
   // Listen for folder file events
   useEffect(() => {
     const setupListeners = async () => {
