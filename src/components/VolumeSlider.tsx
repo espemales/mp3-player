@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { audioEngine } from '../audio/AudioEngine';
 
-export function VolumeSlider() {
+interface Props {
+  onVolumeChange?: (vol: number) => void;
+}
+
+export function VolumeSlider({ onVolumeChange }: Props) {
   const [show, setShow] = useState(false);
   const [vol, setVol] = useState(audioEngine.getVolume());
 
@@ -9,6 +13,9 @@ export function VolumeSlider() {
     const v = parseFloat(e.target.value);
     setVol(v);
     audioEngine.setVolume(v);
+    if (onVolumeChange) {
+      onVolumeChange(v);
+    }
   };
 
   return (

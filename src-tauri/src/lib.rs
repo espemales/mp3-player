@@ -1,8 +1,20 @@
+mod config;
+use config::{read_config, write_config, Config};
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Emitter, Manager, WindowEvent,
 };
+
+#[tauri::command]
+fn get_config() -> Config {
+    read_config()
+}
+
+#[tauri::command]
+fn save_config(config: Config) -> Result<(), String> {
+    write_config(&config).map_err(|e| e.to_string())
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -94,6 +106,7 @@ pub fn run() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![get_config, save_config])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

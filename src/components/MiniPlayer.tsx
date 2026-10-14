@@ -6,9 +6,10 @@ import { EqualizerPopover } from './EqualizerPopover';
 
 interface MiniPlayerProps {
   playlist: UsePlaylist;
+  onVolumeChange?: (vol: number) => void;
 }
 
-export function MiniPlayer({ playlist }: MiniPlayerProps) {
+export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
   const { currentTrack, isPlaying, play, pause, next, prev } = playlist;
   const titleRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -54,7 +55,7 @@ export function MiniPlayer({ playlist }: MiniPlayerProps) {
         </span>
       </div>
       <button onClick={prev} title="Previous">⏮</button>
-      <VolumeSlider />
+      <VolumeSlider onVolumeChange={onVolumeChange} />
       <button onClick={toggleEQPopover} className="eq-btn" title="EQ">EQ</button>
       {showEQPopover && (
         <EqualizerPopover
