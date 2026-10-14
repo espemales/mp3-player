@@ -168,3 +168,8 @@
   border-radius: 4px;
   padding: 3px 8px;
 }
+
+.mini-player.dragging {
+  border: 2px dashed rgba(100, 180, 255, 0.7);
+  background: rgba(60, 100, 160, 0.3);
+}

@@ -16,6 +16,7 @@ export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [progress] = useState(0);
   const [showEQPopover, setShowEQPopover] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -44,8 +45,30 @@ export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
     setShowEQPopover(!showEQPopover);
   };
 
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const items = Array.from(e.dataTransfer.files);
+    for (const item of items) {
+      const path = (item as any).path as string;
+      if (!path) continue;
+      // Check if it's a directory by trying to scan it
+      if (path.match(/\.(mp3|flac|wav|m4a|ogg)$/i)) {
+        // Single audio file
+        playlist.addFile(path);
+      } else {
+        // Assume folder - scan it
+        playlist.loadFolder(path);
+      }
+    }
+  };
+
   return (
-    <div className="mini-player" ref={containerRef}>
+    <div className={`mini-player${isDragging ? ' dragging' : ''}`}
+      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
+    >
       <div className="drag-handle" onMouseDown={handleDragStart}>
         ⋮⋮
       </div>

@@ -14,6 +14,7 @@ export interface UsePlaylist {
   next: () => void;
   prev: () => void;
   loadFolder: (folderPath: string) => Promise<void>;
+  addFile: (path: string) => void;
 }
 
 export function usePlaylist(): UsePlaylist {
@@ -57,6 +58,15 @@ export function usePlaylist(): UsePlaylist {
       });
     } catch (e) {
       console.error('Failed to load folder:', e);
+    }
+  }, []);
+
+  const addFile = useCallback((path: string) => {
+    if (path.match(/\.(mp3|flac|wav|m4a|ogg)$/i)) {
+      setTracks(prev => {
+        if (prev.some(t => t.path === path)) return prev;
+        return [...prev, { path, name: path.split(/[/\\]/).pop() || path }];
+      });
     }
   }, []);
 
@@ -112,5 +122,6 @@ export function usePlaylist(): UsePlaylist {
     next,
     prev,
     loadFolder,
+    addFile,
   };
 }
