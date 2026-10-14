@@ -1,10 +1,12 @@
 import { Track } from '../types';
+import { Equalizer } from './Equalizer';
 
 class AudioEngine {
   private audio = new Audio();
   private _volume = 1;
   private _muted = false;
   private _lastVolume = 1;
+  public readonly eq = new Equalizer(this.audio);
 
   play(): void {
     this.audio.play();
@@ -16,6 +18,7 @@ class AudioEngine {
 
   loadTrack(track: Track): void {
     this.audio.src = track.path;
+    this.eq.connect();
     this.audio.play();
   }
 
