@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Track } from '../types';
 import { audioEngine } from '../audio/AudioEngine';
+import { notify } from '../utils/notifications';
 
 export interface UsePlaylist {
   tracks: Track[];
@@ -58,6 +59,7 @@ export function usePlaylist(): UsePlaylist {
       });
     } catch (e) {
       console.error('Failed to load folder:', e);
+      notify('MP3 Player', 'Failed to load music folder');
     }
   }, []);
 

@@ -3,20 +3,21 @@ mod config;
 mod file_watcher;
 mod track_eq;
 use commands::Watchers;
-use config::{read_config, write_config, Config};
+use config::{read_config, write_config, Config as AppConfig};
+use tauri_plugin_notification::NotificationExt;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Emitter, Manager, WindowEvent,
+    Emitter, Manager, PhysicalPosition, WindowEvent,
 };
 
 #[tauri::command]
-fn get_config() -> Config {
+fn get_config() -> AppConfig {
     read_config()
 }
 
 #[tauri::command]
-fn save_config(config: Config) -> Result<(), String> {
+fn save_config(config: AppConfig) -> Result<(), String> {
     write_config(&config).map_err(|e| e.to_string())
 }
 
@@ -27,6 +28,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             // Initialize watchers state
             let watchers = Watchers::default();
@@ -101,6 +103,15 @@ pub fn run() {
                 })
                 .build(app)?;
 
+            // Restore window position from config
+            let cfg = read_config();
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_position(PhysicalPosition {
+                    x: cfg.window_position.x as i32,
+                    y: cfg.window_position.y as i32,
+                });
+            }
+
             // Handle window close -> hide to tray instead of exiting
             if let Some(window) = app.get_webview_window("main") {
                 let window_clone = window.clone();
@@ -108,6 +119,12 @@ pub fn run() {
                     if let WindowEvent::CloseRequested { api, .. } = event {
                         api.prevent_close();
                         let _ = window_clone.hide();
+                    }
+                    if let WindowEvent::Moved(pos) = event {
+                        let mut cfg = read_config();
+                        cfg.window_position.x = pos.x as f64;
+                        cfg.window_position.y = pos.y as f64;
+                        let _ = write_config(&cfg);
                     }
                 });
             }

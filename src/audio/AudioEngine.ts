@@ -40,6 +40,18 @@ class AudioEngine {
   }
   isMuted(): boolean { return this._muted; }
 
+  get currentTime(): number {
+    return this.audio.currentTime;
+  }
+
+  set currentTime(t: number) {
+    this.audio.currentTime = t;
+  }
+
+  get duration(): number {
+    return this.audio.duration || 0;
+  }
+
   onEnded(cb: () => void): void {
     this.audio.onended = cb;
   }

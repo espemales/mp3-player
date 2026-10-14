@@ -74,12 +74,15 @@
   right: 0;
   height: 3px;
   background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  border-radius: 0 0 12px 12px;
 }
 
 .mini-player .progress-fill {
   height: 100%;
-  background: #fff;
-  transition: width 0.1s linear;
+  background: #4a9eff;
+  border-radius: 0 0 12px 12px;
+  transition: width 0.25s linear;
 }
 
 .volume-wrap {

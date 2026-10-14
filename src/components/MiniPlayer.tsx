@@ -1,6 +1,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useRef, useEffect, useState } from 'react';
 import { UsePlaylist } from '../hooks/usePlaylist';
+import { audioEngine } from '../audio/AudioEngine';
 import { VolumeSlider } from './VolumeSlider';
 import { EqualizerPopover } from './EqualizerPopover';
 
@@ -14,7 +15,7 @@ export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
   const titleRef = useRef<HTMLSpanElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
-  const [progress] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [showEQPopover, setShowEQPopover] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -32,6 +33,27 @@ export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const cur = audioEngine.currentTime;
+      const dur = audioEngine.duration;
+      if (dur > 0) {
+        setProgress((cur / dur) * 100);
+      }
+    }, 250);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const bar = e.currentTarget;
+    const rect = bar.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    const dur = audioEngine.duration;
+    if (dur > 0) {
+      audioEngine.currentTime = pct * dur;
+    }
+  };
 
   const handleDragStart = () => {
     getCurrentWindow().startDragging();
@@ -91,7 +113,7 @@ export function MiniPlayer({ playlist, onVolumeChange }: MiniPlayerProps) {
       </button>
       <button onClick={next} title="Next">⏭</button>
       <button onClick={handleClose} title="Hide to tray">✕</button>
-      <div className="progress-bar">
+      <div className="progress-bar" onClick={handleProgressClick}>
         <div className="progress-fill" style={{ width: `${progress}%` }} />
       </div>
     </div>
