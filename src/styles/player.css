@@ -81,3 +81,40 @@
   background: #fff;
   transition: width 0.1s linear;
 }
+
+.volume-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.volume-btn {
+  cursor: pointer;
+}
+.volume-popup {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.95);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 10px 6px;
+  z-index: 100;
+}
+.volume-slider {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  height: 60px;
+  width: 4px;
+  appearance: none;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}

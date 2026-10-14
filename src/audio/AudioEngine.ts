@@ -2,6 +2,9 @@ import { Track } from '../types';
 
 class AudioEngine {
   private audio = new Audio();
+  private _volume = 1;
+  private _muted = false;
+  private _lastVolume = 1;
 
   play(): void {
     this.audio.play();
@@ -16,9 +19,23 @@ class AudioEngine {
     this.audio.play();
   }
 
+  getVolume(): number { return this._volume; }
   setVolume(vol: number): void {
-    this.audio.volume = vol;
+    this._volume = Math.max(0, Math.min(1, vol));
+    this.audio.volume = this._volume;
+    if (this._volume > 0) this._muted = false;
   }
+  toggleMute(): void {
+    if (this._muted) {
+      this._muted = false;
+      this.audio.volume = this._lastVolume;
+    } else {
+      this._lastVolume = this._volume;
+      this._muted = true;
+      this.audio.volume = 0;
+    }
+  }
+  isMuted(): boolean { return this._muted; }
 
   onEnded(cb: () => void): void {
     this.audio.onended = cb;

@@ -1,6 +1,7 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useRef, useEffect, useState } from 'react';
 import { UsePlaylist } from '../hooks/usePlaylist';
+import { VolumeSlider } from './VolumeSlider';
 
 interface MiniPlayerProps {
   playlist: UsePlaylist;
@@ -47,6 +48,7 @@ export function MiniPlayer({ playlist }: MiniPlayerProps) {
         </span>
       </div>
       <button onClick={prev} title="Previous">⏮</button>
+      <VolumeSlider />
       <button onClick={isPlaying ? pause : play} title={isPlaying ? 'Pause' : 'Play'}>
         {isPlaying ? '⏸' : '▶'}
       </button>
