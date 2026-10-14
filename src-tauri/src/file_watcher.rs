@@ -40,6 +40,7 @@ pub fn scan_folder(folder: &str) -> ScanResult {
 }
 
 // Per-watcher state: receiver is stored so the watcher thread can send to it
+#[allow(dead_code)]
 pub struct WatcherState {
     pub watcher: Option<RecommendedWatcher>,
     pub watch_path: String,

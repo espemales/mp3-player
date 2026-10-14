@@ -4,7 +4,6 @@ mod file_watcher;
 mod track_eq;
 use commands::Watchers;
 use config::{read_config, write_config, Config as AppConfig};
-use tauri_plugin_notification::NotificationExt;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
