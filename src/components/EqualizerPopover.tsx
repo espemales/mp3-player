@@ -8,7 +8,7 @@ interface Props {
 }
 
 export function EqualizerPopover({ currentTrackPath, onClose }: Props) {
-  const { bands, currentPreset, presetNames, applyPreset } = useEqualizer();
+  const { bands, currentPreset, presetNames, applyPreset, saveTrackEq } = useEqualizer();
   const ref = useRef<HTMLDivElement>(null);
   const [hasCustom, setHasCustom] = useState(false);
 
@@ -28,9 +28,9 @@ export function EqualizerPopover({ currentTrackPath, onClose }: Props) {
     return () => document.removeEventListener('mousedown', handler);
   }, [onClose]);
 
-  const handleSaveToTrack = () => {
+  const handleSaveToTrack = async () => {
     if (!currentTrackPath) return;
-    localStorage.setItem(`eq:${currentTrackPath}`, JSON.stringify(bands));
+    await saveTrackEq(currentTrackPath, bands);
     setHasCustom(true);
   };
 

@@ -1,4 +1,6 @@
+mod commands;
 mod config;
+mod track_eq;
 use config::{read_config, write_config, Config};
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
@@ -106,7 +108,13 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![get_config, save_config])
+        .invoke_handler(tauri::generate_handler![
+            get_config, save_config,
+            commands::get_track_eq,
+            commands::save_track_eq,
+            commands::get_custom_presets,
+            commands::save_custom_preset
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
